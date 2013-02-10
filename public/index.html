@@ -183,14 +183,7 @@
           behind = currentTotal - reservationNumber;
           inFront = Math.max(reservationNumber - currentServing, 0);
           isWinning = inFront == 0;
-
-          for (i = 1; i < events.length; i++) {
-              var event = events[i],
-                  lastEvent = events[i - 1];
-
-              winsInPeriod += event.serving - lastEvent.serving;
-          }
-
+          winsInPeriod = events[events.length - 1].serving - events[0].serving;
           winsPerPeriodLength = winsInPeriod / events.length;
           periodLengthInSeconds = cacheLength / events.length;
           winsPerSecond = winsPerPeriodLength / periodLengthInSeconds;
