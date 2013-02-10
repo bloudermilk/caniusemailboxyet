@@ -1,0 +1,16 @@
+{
+  "name": "can_i_use_mailbox_yet",
+  "version": "0.0.0",
+  "author": "Brendan Loudermilk <bloudermilk@gmail.com>",
+  "description": "The kind of shit I do on Friday night",
+  "scripts": {
+    "start": "./node_modules/coffee-script/bin/coffee server.coffee"
+  },
+  "dependencies": {
+    "coffee-script": "~ 1.4.0",
+    "request": "~ 2.12.0",
+    "librato-metrics": "~ 0.0.7",
+    "socket.io": "~ 0.9.13",
+    "express": "~ 3.1.0"
+  }
+}

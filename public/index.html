@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Can I use Mailbox yet?</title>
+
+    <style type="text/css">
+      body {
+        max-width: 480px;
+        margin: 5em auto;
+        padding: 0 1em;
+        font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+        text-align: center;
+      }
+
+      a {
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      h1 {
+        margin-bottom: 1em;
+      }
+
+      label {
+        color: #333;
+      }
+
+      p {
+        color: #666;
+      }
+
+      #stats {
+        display: none;
+      }
+
+      #answer {
+        display: none;
+      }
+
+      #in[data-wining] {
+        display: auto;
+      }
+
+      #in[data-winning="true"] {
+        color: green;
+      }
+
+      #in[data-winning="true"]:before {
+        content: "Yes!";
+      }
+
+      #in[data-winning="false"] {
+        color: red;
+      }
+
+      #in[data-winning="false"]:before {
+        content: "Nope...";
+      }
+
+      #stats span {
+        font-weight: bold;
+      }
+
+      footer {
+        font-size: 0.75em;
+        margin-top: 2.5em;
+      }
+
+      footer p {
+        color: #999;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Can I use <a href="http://www.mailboxapp.com/">Mailbox</a> yet?</h1>
+
+    <form>
+      <label for="reservation-number">Reservation #:</label>
+      <input type="text" id="reservation-number">
+    </form>
+
+    <h2 id="in"></h2>
+
+    <p id="stats">
+      At this rate you'll be using Mailbox <span id="time-until-win"></span>.
+      <br>
+      Before you: <span id="in-front"></span>
+      <br>
+      After you: <span id="behind"></span>
+    </p>
+
+    <footer>
+      <p>
+        Built with love in Los Angeles by <a href="http://twitter.com/bloudermilk">@bloudermilk</a>.
+        <br>
+        Interactive <a href="https://metrics.librato.com/share/dashboards/hf1dwn0b">charts</a> available.
+      </p>
+    </footer>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script src="https://raw.github.com/layam/js_humanized_time_span/master/humanized_time_span.js"></script>
+
+    <script>
+      // Stolen from http://www.quirksmode.org/js/cookies.html
+      function createCookie(name,value,days) {
+        if (days) {
+          var date = new Date();
+          date.setTime(date.getTime()+(days*24*60*60*1000));
+          var expires = "; expires="+date.toGMTString();
+        }
+        else var expires = "";
+        document.cookie = name+"="+value+expires+"; path=/";
+      }
+
+      function readCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+          var c = ca[i];
+          while (c.charAt(0)==' ') c = c.substring(1,c.length);
+          if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+      }
+
+      function eraseCookie(name) {
+        createCookie(name,"",-1);
+      }
+    </script>
+
+    <script>
+      var COOKIE_NAME = "number",
+          COOKIE_LIFETIME = 30, // In days
+          socket = io.connect(location.origin),
+          reservationNumber = readCookie(COOKIE_NAME),
+          events = [],
+          cacheLength = 0,
+          $reservationNumber = $(),
+          $in = $(),
+          $stats = $(),
+          $inFront = $(),
+          $behind = $(),
+          $timeUntilWin = $(),
+          inFront,
+          behind,
+          isWinning,
+          winTime;
+
+      function updateStats() {
+          var lastEvent = events[events.length - 1],
+              currentServing = lastEvent.serving,
+              currentTotal = lastEvent.total,
+              winsInPeriod = 0,
+              windsPerPeriodLength,
+              periodLengthInSeconds,
+              winsPerSecond,
+              secondsUntilWin,
+              i;
+
+          behind = currentTotal - reservationNumber;
+          inFront = Math.max(reservationNumber - currentServing, 0);
+          isWinning = inFront == 0;
+
+          for (i = 1; i < events.length; i++) {
+              var event = events[i],
+                  lastEvent = events[i - 1];
+
+              winsInPeriod += event.serving - lastEvent.serving;
+          }
+
+          winsPerPeriodLength = winsInPeriod / events.length;
+          periodLengthInSeconds = cacheLength / events.length;
+          winsPerSecond = winsPerPeriodLength / periodLengthInSeconds;
+          secondsUntilWin = inFront / winsPerSecond;
+
+          winTime = new Date()
+          winTime.setSeconds(winTime.getSeconds() + secondsUntilWin)
+      }
+
+      function updateUI () {
+          if (reservationNumber && events.length) {
+              if (!isWinning) {
+                $stats.show();
+              } else {
+                $stats.hide();
+              }
+
+              $in.attr("data-winning", isWinning);
+              $inFront.text(inFront);
+              $behind.text(behind);
+              $timeUntilWin.text(humanized_time_span(winTime))
+          } else {
+              $stats.hide()
+              $in.removeAttr("data-winning");
+          }
+      }
+
+      function updateReservationNumber () {
+          reservationNumber = parseInt($(this).val()) || "";
+
+          createCookie(COOKIE_NAME, reservationNumber, COOKIE_LIFETIME);
+
+          updateStats();
+          updateUI();
+      }
+
+      socket.on("seed", function (seed) {
+          events = seed.data;
+          cacheLength = seed.cacheLength;
+
+          updateStats();
+          updateUI();
+      });
+
+      socket.on("update", function (data) {
+          events.push(data);
+
+          if (events.length > cacheLength) {
+              events.shift()
+          }
+
+          updateStats();
+          updateUI();
+      });
+
+      $(function () {
+          updateUI();
+
+          $reservationNumber = $("#reservation-number");
+          $in = $("#in");
+          $stats = $("#stats");
+          $inFront = $("#in-front");
+          $behind = $("#behind");
+          $timeUntilWin = $("#time-until-win");
+
+          $reservationNumber.val(reservationNumber);
+
+          $reservationNumber.on("keydown keyup change", updateReservationNumber);
+      });
+    </script>
+  </body>
+</html>
