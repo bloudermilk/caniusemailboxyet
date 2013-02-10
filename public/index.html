@@ -26,6 +26,10 @@
       }
 
       h1 {
+        margin-bottom: 0.5em;
+      }
+
+      .instructions {
         margin-bottom: 1em;
       }
 
@@ -77,6 +81,11 @@
       footer p {
         color: #999;
       }
+
+      form small {
+        display: block;
+        color: #999;
+      }
     </style>
 
     <script type="text/javascript">
@@ -96,9 +105,12 @@
   <body>
     <h1>Can I use <a href="http://www.mailboxapp.com/">Mailbox</a> yet?</h1>
 
+    <p>Find out <strong>if</strong> and <strong>when</strong> you'll be e-mailing with the cool kids.</p>
+
     <form>
       <label for="reservation-number">Reservation #:</label>
       <input type="text" id="reservation-number">
+      <small>Hint: You entered this when you first downloaded Mailbox</small>
     </form>
 
     <h2 id="in"></h2>
