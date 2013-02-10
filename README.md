@@ -29,7 +29,11 @@ $ npm start
 
 ## Hacking the Mailbox reservation API
 
-I used [this guide](https_guide) to intercept the HTTPS traffic on my iPhone and
-grab the request parameters to send to the API.
+I used [this guide][https_guide] to intercept the HTTPS traffic on my iPhone and
+grab the request parameters to send to the API. Once you're intercepting
+traffic you need to open the app and let Mailbox check your position. You'll see
+it making requests every 2-3 seconds. Click on any of these requests and look at
+the request parameters and URL, then set the environment variables on your
+machine based on that information.
 
 [https_guide]: http://www.tuaw.com/2011/02/21/how-to-inspect-ioss-http-traffic-without-spending-a-dime/
