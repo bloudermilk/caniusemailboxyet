@@ -6,6 +6,10 @@ app = require("express")()
 server = app.listen(process.env.PORT || 8000, "0.0.0.0")
 io = require("socket.io").listen(server)
 
+# Heroku settings
+io.set("transports", ["xhr-polling"])
+io.set("polling duration", 10)
+
 # Config
 URL = process.env.URL
 CACHE_LENGTH = 60
