@@ -20,6 +20,13 @@ vairables:
 By default, the server will run on port 8000. You can change this by
 setting the `PORT` environment variable.
 
+Once all the proper environment variables are set, you should be able to run the
+server with the following command:
+
+```bash
+$ npm start
+```
+
 ## Hacking the Mailbox reservation API
 
 I used [this guide](https_guide) to intercept the HTTPS traffic on my iPhone and
