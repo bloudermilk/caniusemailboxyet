@@ -6,15 +6,20 @@
     <title>Can I use Mailbox yet?</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, target-densitydpi=medium-dpi">
-    <meta name="description" content="An absolutely *super* way to find out if you can use Mailbox yet!">
+    <meta name="description" content="An absolutely *super* way to find out if and when you can use Mailbox!">
     <meta name="author" content="Brendan Loudermilk">
 
     <style type="text/css">
+      html {
+        background-color: #f3f3f3;
+      }
+
       body {
         margin: 5em auto;
         padding: 0 1em;
         font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
         text-align: center;
+        max-width: 550px;
       }
 
       a {
@@ -25,65 +30,57 @@
         text-decoration: underline;
       }
 
-      h1 {
-        margin-bottom: 0.5em;
+      header {
+        margin-bottom: 2em;
       }
 
-      .instructions {
-        margin-bottom: 1em;
-      }
-
-      label {
-        color: #333;
+      #description {
+        width: 60%;
+        margin: 0 auto;
       }
 
       p {
         color: #666;
       }
 
-      #stats {
+      #in {
         display: none;
       }
 
-      #answer {
-        display: none;
-      }
-
-      #in[data-wining] {
-        display: auto;
+      #in[data-winning] {
+        display: block;
       }
 
       #in[data-winning="true"] {
         color: green;
       }
 
-      #in[data-winning="true"]:before {
-        content: "Yes!";
-      }
-
       #in[data-winning="false"] {
         color: red;
+      }
+
+      #in[data-winning="true"]:before {
+        content: "You're in!";
       }
 
       #in[data-winning="false"]:before {
         content: "Nope...";
       }
 
-      #stats span {
-        font-weight: bold;
+      #stats {
+        display: none;
+      }
+
+      #reset {
+        display: none;
       }
 
       footer {
         font-size: 0.75em;
-        margin-top: 2.5em;
+        margin-top: 2.667em;
       }
 
       footer p {
-        color: #999;
-      }
-
-      form small {
-        display: block;
         color: #999;
       }
     </style>
@@ -103,25 +100,29 @@
     </script>
   </head>
   <body>
-    <h1>Can I use <a href="http://www.mailboxapp.com/">Mailbox</a> yet?</h1>
+    <header>
+      <h1>Can I use <a href="http://www.mailboxapp.com/">Mailbox</a> yet?</h1>
 
-    <p>Find out <strong>if</strong> and <strong>when</strong> you'll be e-mailing with the cool kids.</p>
+      <p id="description">Find out <strong>if</strong> and <strong>when</strong> you'll be able to use the most hyped email client since Gmail.</p>
+    </header>
 
-    <form>
-      <label for="reservation-number">Reservation #:</label>
-      <input type="text" id="reservation-number">
-      <small>Hint: You entered this when you first downloaded Mailbox</small>
+    <form id="form">
+      <label for="in-front-input">Number of people in front of you:</label>
+      <input type="text" id="in-front-input">
+      <input type="submit">
     </form>
 
     <h2 id="in"></h2>
 
     <p id="stats">
-      At this rate you'll be using Mailbox <span id="time-until-win"></span>.
+      At this rate you'll be using Mailbox <strong id="time-until-win"></strong>.
       <br>
-      Before you: <span id="in-front"></span>
+      Before you: <strong id="in-front"></strong>
       <br>
-      After you: <span id="behind"></span>
+      After you: <strong id="behind"></strong>
     </p>
+
+    <small><a id="reset" href="#">reset</a></small>
 
     <footer>
       <p>
@@ -172,12 +173,14 @@
           reservationNumber = readCookie(COOKIE_NAME),
           events = [],
           cacheLength = 0,
-          $reservationNumber = $(),
+          $form = $(),
+          $inFrontInput = $(),
           $in = $(),
           $stats = $(),
           $inFront = $(),
           $behind = $(),
           $timeUntilWin = $(),
+          $reset = $(),
           inFront,
           behind,
           isWinning,
@@ -191,8 +194,7 @@
               windsPerPeriodLength,
               periodLengthInSeconds,
               winsPerSecond,
-              secondsUntilWin,
-              i;
+              secondsUntilWin;
 
           behind = currentTotal - reservationNumber;
           inFront = Math.max(reservationNumber - currentServing, 0);
@@ -203,8 +205,8 @@
           winsPerSecond = winsPerPeriodLength / periodLengthInSeconds;
           secondsUntilWin = inFront / winsPerSecond;
 
-          winTime = new Date()
-          winTime.setSeconds(winTime.getSeconds() + secondsUntilWin)
+          winTime = new Date();
+          winTime.setSeconds(winTime.getSeconds() + secondsUntilWin);
       }
 
       function updateUI () {
@@ -215,23 +217,44 @@
                 $stats.hide();
               }
 
+              $reset.show();
+              $form.hide();
               $in.attr("data-winning", isWinning);
               $inFront.text(inFront);
               $behind.text(behind);
-              $timeUntilWin.text(humanized_time_span(winTime))
+              $timeUntilWin.text(humanized_time_span(winTime));
           } else {
-              $stats.hide()
+              $reset.hide();
+              $form.show();
+              $stats.hide();
               $in.removeAttr("data-winning");
           }
       }
 
-      function updateReservationNumber () {
-          reservationNumber = parseInt($(this).val()) || "";
+      function onFormSubmit () {
+          var lastEvent = events[events.length - 1],
+              currentServing = lastEvent.serving,
+              setPeopleInFront = parseInt($inFrontInput.val());
 
-          createCookie(COOKIE_NAME, reservationNumber, COOKIE_LIFETIME);
+          // currentServing should always be set by now, but we ought to check
+          if (setPeopleInFront && currentServing) {
+            reservationNumber = currentServing + setPeopleInFront;
 
-          updateStats();
+            createCookie(COOKIE_NAME, reservationNumber, COOKIE_LIFETIME);
+
+            updateStats();
+            updateUI();
+          }
+
+          return false;
+      }
+
+      function onResetClick (event) {
+          reservationNumber = "";
+          eraseCookie(COOKIE_NAME);
           updateUI();
+
+          event.preventDefault();
       }
 
       socket.on("seed", function (seed) {
@@ -246,7 +269,7 @@
           events.push(data);
 
           if (events.length > cacheLength) {
-              events.shift()
+              events.shift();
           }
 
           updateStats();
@@ -254,18 +277,19 @@
       });
 
       $(function () {
-          updateUI();
-
-          $reservationNumber = $("#reservation-number");
+          $form = $("#form")
+          $inFrontInput = $("#in-front-input");
           $in = $("#in");
           $stats = $("#stats");
           $inFront = $("#in-front");
           $behind = $("#behind");
           $timeUntilWin = $("#time-until-win");
+          $reset = $("#reset")
 
-          $reservationNumber.val(reservationNumber);
+          $form.on("submit", onFormSubmit);
+          $reset.on("click", onResetClick);
 
-          $reservationNumber.on("keydown keyup change", updateReservationNumber);
+          updateUI();
       });
     </script>
   </body>
