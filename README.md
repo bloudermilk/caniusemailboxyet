@@ -5,6 +5,12 @@ reservation API and sends live stats to the browser via socket.io. It attempts
 to estimate your wait time by averaging the number of people let in per
 minute. It's a pretty crude estimation but it seems to be accurate enough.
 
+**Note:** Mailbox has since [opened their doors][fin] to all users who wish to
+join, so this software is obsolete. Still, I hope it may serve as a good example
+of how useful Node can be as a tool.
+
+[fin]: http://www.mailboxapp.com/blog/?p=1#mailbox-now-available-without-the-wait
+
 ## Setup
 
 If you'd like to run this yourself, you need to [hack the mailbox
