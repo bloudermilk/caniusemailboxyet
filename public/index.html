@@ -6,7 +6,7 @@
     <title>Can I use Mailbox yet?</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, target-densitydpi=medium-dpi">
-    <meta name="description" content="An absolutely *super* way to find out if and when you can use Mailbox!">
+    <meta name="description" content="[Was] An absolutely *super* way to find out if and when you can use Mailbox!">
     <meta name="author" content="Brendan Loudermilk">
 
     <style type="text/css">
@@ -34,45 +34,13 @@
         margin-bottom: 2em;
       }
 
-      #description {
+      .description {
         width: 60%;
         margin: 0 auto;
       }
 
       p {
         color: #666;
-      }
-
-      #in {
-        display: none;
-      }
-
-      #in[data-winning] {
-        display: block;
-      }
-
-      #in[data-winning="true"] {
-        color: green;
-      }
-
-      #in[data-winning="false"] {
-        color: red;
-      }
-
-      #in[data-winning="true"]:before {
-        content: "You're in!";
-      }
-
-      #in[data-winning="false"]:before {
-        content: "Nope...";
-      }
-
-      #stats {
-        display: none;
-      }
-
-      #reset {
-        display: none;
       }
 
       footer {
@@ -103,194 +71,17 @@
     <header>
       <h1>Can I use <a href="http://www.mailboxapp.com/">Mailbox</a> yet?</h1>
 
-      <p id="description">Find out <strong>if</strong> and <strong>when</strong> you'll be able to use the most hyped email client since Gmail.</p>
+      <p class="description"><strong>Yes, you can!</strong> On February 16th Mailbox <a href="http://www.mailboxapp.com/blog/?p=1#mailbox-now-available-without-the-wait">announced the removal</a> of the waiting queue.</p>
     </header>
-
-    <form id="form">
-      <label for="in-front-input">Number of people in front of you:</label>
-      <input type="text" id="in-front-input">
-      <input type="submit">
-    </form>
-
-    <h2 id="in"></h2>
-
-    <p id="stats">
-      At this rate you'll be using Mailbox <strong id="time-until-win"></strong>.
-      <br>
-      Before you: <strong id="in-front"></strong>
-      <br>
-      After you: <strong id="behind"></strong>
-    </p>
-
-    <small><a id="reset" href="#">reset</a></small>
 
     <footer>
       <p>
         Built with love in Los Angeles by <a href="http://twitter.com/bloudermilk">@bloudermilk</a>.
         <br>
-        Interactive <a href="https://metrics.librato.com/share/dashboards/hf1dwn0b">charts</a>
+        Interactive <a href="https://metrics.librato.com/share/dashboards/hf1dwn0b?duration=5702400&end_time=1366179062">charts</a>
         and <a href="https://github.com/bloudermilk/caniusemailboxyet">source code</a>
         available.
       </p>
     </footer>
-
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
-    <script src="https://raw.github.com/layam/js_humanized_time_span/master/humanized_time_span.js"></script>
-
-    <script>
-      // Stolen from http://www.quirksmode.org/js/cookies.html
-      function createCookie(name,value,days) {
-        if (days) {
-          var date = new Date();
-          date.setTime(date.getTime()+(days*24*60*60*1000));
-          var expires = "; expires="+date.toGMTString();
-        }
-        else var expires = "";
-        document.cookie = name+"="+value+expires+"; path=/";
-      }
-
-      function readCookie(name) {
-        var nameEQ = name + "=";
-        var ca = document.cookie.split(';');
-        for(var i=0;i < ca.length;i++) {
-          var c = ca[i];
-          while (c.charAt(0)==' ') c = c.substring(1,c.length);
-          if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
-        }
-        return null;
-      }
-
-      function eraseCookie(name) {
-        createCookie(name,"",-1);
-      }
-    </script>
-
-    <script>
-      var COOKIE_NAME = "number",
-          COOKIE_LIFETIME = 30, // In days
-          socket = io.connect(location.origin),
-          reservationNumber = readCookie(COOKIE_NAME),
-          events = [],
-          cacheLength = 0,
-          $form = $(),
-          $inFrontInput = $(),
-          $in = $(),
-          $stats = $(),
-          $inFront = $(),
-          $behind = $(),
-          $timeUntilWin = $(),
-          $reset = $(),
-          inFront,
-          behind,
-          isWinning,
-          winTime;
-
-      function updateStats() {
-          var lastEvent = events[events.length - 1],
-              currentServing = lastEvent.serving,
-              currentTotal = lastEvent.total,
-              winsInPeriod = 0,
-              windsPerPeriodLength,
-              periodLengthInSeconds,
-              winsPerSecond,
-              secondsUntilWin;
-
-          behind = currentTotal - reservationNumber;
-          inFront = Math.max(reservationNumber - currentServing, 0);
-          isWinning = inFront == 0;
-          winsInPeriod = events[events.length - 1].serving - events[0].serving;
-          winsPerPeriodLength = winsInPeriod / events.length;
-          periodLengthInSeconds = cacheLength / events.length;
-          winsPerSecond = winsPerPeriodLength / periodLengthInSeconds;
-          secondsUntilWin = inFront / winsPerSecond;
-
-          winTime = new Date();
-          winTime.setSeconds(winTime.getSeconds() + secondsUntilWin);
-      }
-
-      function updateUI () {
-          if (reservationNumber && events.length) {
-              if (!isWinning) {
-                $stats.show();
-              } else {
-                $stats.hide();
-              }
-
-              $reset.show();
-              $form.hide();
-              $in.attr("data-winning", isWinning);
-              $inFront.text(inFront);
-              $behind.text(behind);
-              $timeUntilWin.text(humanized_time_span(winTime));
-          } else {
-              $reset.hide();
-              $form.show();
-              $stats.hide();
-              $in.removeAttr("data-winning");
-          }
-      }
-
-      function onFormSubmit () {
-          var lastEvent = events[events.length - 1],
-              currentServing = lastEvent.serving,
-              setPeopleInFront = parseInt($inFrontInput.val());
-
-          // currentServing should always be set by now, but we ought to check
-          if (setPeopleInFront && currentServing) {
-            reservationNumber = currentServing + setPeopleInFront;
-
-            createCookie(COOKIE_NAME, reservationNumber, COOKIE_LIFETIME);
-
-            updateStats();
-            updateUI();
-          }
-
-          return false;
-      }
-
-      function onResetClick (event) {
-          reservationNumber = "";
-          eraseCookie(COOKIE_NAME);
-          updateUI();
-
-          event.preventDefault();
-      }
-
-      socket.on("seed", function (seed) {
-          events = seed.data;
-          cacheLength = seed.cacheLength;
-
-          updateStats();
-          updateUI();
-      });
-
-      socket.on("update", function (data) {
-          events.push(data);
-
-          if (events.length > cacheLength) {
-              events.shift();
-          }
-
-          updateStats();
-          updateUI();
-      });
-
-      $(function () {
-          $form = $("#form")
-          $inFrontInput = $("#in-front-input");
-          $in = $("#in");
-          $stats = $("#stats");
-          $inFront = $("#in-front");
-          $behind = $("#behind");
-          $timeUntilWin = $("#time-until-win");
-          $reset = $("#reset")
-
-          $form.on("submit", onFormSubmit);
-          $reset.on("click", onResetClick);
-
-          updateUI();
-      });
-    </script>
   </body>
 </html>
